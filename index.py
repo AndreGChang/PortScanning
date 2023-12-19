@@ -1,40 +1,37 @@
 from scapy.all import *
+import socket
 
-def scan_port(ip, porta):
-    #Cria um pacote SNY
-    #Usa o RandShort para pegar um valor aleatoria para a porta de origem
+def scan_port(ip, port):
     src_port = RandShort()
-
-
-    #Inicia uma conexão TCP com endereço IP especifico, configura a flag "S", de SYN, que e usada para iniciar uma conexão TCP(o primeiro processo do handshake de três vias do TCP).
     p = IP(dst=ip)/TCP(sport=src_port, dport=port, flags="S")
+    resp = sr1(p, timeout=2, verbose=0)
 
-    #envia o pacote e espera pela resposta
-    resp = sr1(p, timeout=3, verbose=0)
+    if resp is not None and resp.haslayer(TCP) and resp.getlayer(TCP).flags == 0x12:
+        return True  # Porta aberta
+    return False
 
-    # Checa a resposta
-    if resp is None:
-        print(f"Port {port}: Sem resposta")
-    elif resp.haslayer(TCP):
-        if resp.getlayer(TCP).flags == 0x12:
-            #porta aberta
-            print(f"Port {port}: Aberta")
-            # Envia um pacote RST para encerrar a conexão
-            sr(IP(dst=ip)/TCP(sport=src_port, dport=port, flags="R"), timeout=3, verbose=0)
-        elif resp.getlayer(TCP).flags == 0x14:
-            # Porta fechada
-            print(f"Posta {port}: fechada")
-    else:
-        print(f"Posta {port}: Resposta inesperada")
+def banner_grab(ip, port):
+    try:
+        # Estabelece uma conexão TCP
+        s = socket.socket()
+        s.settimeout(5)
+        s.connect((ip, port))
+        s.send(b'Hello\r\n')
+        banner = s.recv(1024)
+        s.close()
+        return banner.decode('utf-8', 'ignore')
+    except: 
+        return 'Falha na obtenção do banner'
 
-#Pedindo o IP alvo para o usuario 
-target_ip = input("Digite o endereco de Ip alvo: ")
-
-# Definindo o range de postas
-
+# Definindo o range de portas
 start_port = 1
-end_port = 1024
+end_port = 1024  # Ajuste conforme necessário
 
-#realiza o scan
-for port in range(start_port,end_port + 1):
-    scan_port(target_ip, port)
+# Pedindo ao usuário para inserir o IP alvo 
+target_ip = input("Digite o endereço IP alvo: ")
+
+# Realizando o scan
+for port in range(start_port, end_port + 1):
+    if scan_port(target_ip, port):
+        banner = banner_grab(target_ip, port)
+        print(f"Porta {port}: Aberta, Banner: {banner}")
