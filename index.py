@@ -1,37 +1,28 @@
+import logging
+logging.getLogger("scappy.runtime").setLevel(logging.ERROR)
+import sys
 from scapy.all import *
-import socket
 
-def scan_port(ip, port):
-    src_port = RandShort()
-    p = IP(dst=ip)/TCP(sport=src_port, dport=port, flags="S")
-    resp = sr1(p, timeout=2, verbose=0)
+if len(sys.argv) != 4:
+    print("Usage: %s target startport endport"%(sys.argv[0]))
+    sys.exit(0)
 
-    if resp is not None and resp.haslayer(TCP) and resp.getlayer(TCP).flags == 0x12:
-        return True  # Porta aberta
-    return False
 
-def banner_grab(ip, port):
-    try:
-        # Estabelece uma conexão TCP
-        s = socket.socket()
-        s.settimeout(5)
-        s.connect((ip, port))
-        s.send(b'Hello\r\n')
-        banner = s.recv(1024)
-        s.close()
-        return banner.decode('utf-8', 'ignore')
-    except: 
-        return 'Falha na obtenção do banner'
+target = str(sys.argv[1])
+startport = int(sys.argv[2])
+endport = int(sys.argv[3])
 
-# Definindo o range de portas
-start_port = 1
-end_port = 1024  # Ajuste conforme necessário
+print("Scaning " + target + " for open TCP ports\n")
 
-# Pedindo ao usuário para inserir o IP alvo 
-target_ip = input("Digite o endereço IP alvo: ")
+if startport == endport:
+    startport+=1
 
-# Realizando o scan
-for port in range(start_port, end_port + 1):
-    if scan_port(target_ip, port):
-        banner = banner_grab(target_ip, port)
-        print(f"Porta {port}: Aberta, Banner: {banner}")
+for x in range(startport, endport):
+    packet = IP(dst=target)/TCP(dport=x,flag='S')
+    response = sr1(packet, timeout=1, verbose=0)
+
+    if response.haslayer(TCP) and response.getlayer(TCP).flag == 0x12:
+        print("Ports "+ str(x)+" id Open")
+    sr(IP(dst=target)/TCP(dport=response.sport, flag='R'), timeout=1, verbose=0)
+
+print("Scan is complete\n")
