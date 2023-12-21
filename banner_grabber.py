@@ -1,4 +1,5 @@
 import socket
+import requests
 
 def banner_grab(ip, port):
     try:
