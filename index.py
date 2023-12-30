@@ -1,40 +1,50 @@
-from scapy.all import *
+import socket
+import sys
+from scan import *
+from banner_grabber import banner_grab
 
-def scan_port(ip, porta):
-    #Cria um pacote SNY
-    #Usa o RandShort para pegar um valor aleatoria para a porta de origem
-    src_port = RandShort()
-
-
-    #Inicia uma conexão TCP com endereço IP especifico, configura a flag "S", de SYN, que e usada para iniciar uma conexão TCP(o primeiro processo do handshake de três vias do TCP).
-    p = IP(dst=ip)/TCP(sport=src_port, dport=port, flags="S")
-
-    #envia o pacote e espera pela resposta
-    resp = sr1(p, timeout=3, verbose=0)
-
-    # Checa a resposta
-    if resp is None:
-        print(f"Port {port}: Sem resposta")
-    elif resp.haslayer(TCP):
-        if resp.getlayer(TCP).flags == 0x12:
-            #porta aberta
-            print(f"Port {port}: Aberta")
-            # Envia um pacote RST para encerrar a conexão
-            sr(IP(dst=ip)/TCP(sport=src_port, dport=port, flags="R"), timeout=3, verbose=0)
-        elif resp.getlayer(TCP).flags == 0x14:
-            # Porta fechada
-            print(f"Posta {port}: fechada")
+def is_valid_ip(target_ip):
+    try:
+        socket.inet_aton(target_ip)
+        return True
+    except socket.error:
+        return False
+    
+def get_ip_from_input(input_str):
+    if is_valid_ip(input_str):
+        return input_str
     else:
-        print(f"Posta {port}: Resposta inesperada")
+        try:
+            ip = socket.gethostbyname(input_str)
+            return ip
+        except socket.gaierror:
+            return None
+        
+if len(sys.argv) != 3:
+    print("Uso: python index.py <alvo> <tipo>")
+    print("Exemplo: python index.py 192.168.1.1 tcp")
+    sys.exit(1)
 
-#Pedindo o IP alvo para o usuario 
-target_ip = input("Digite o endereco de Ip alvo: ")
+target = get_ip_from_input(sys.argv[1])
+print(target)
+if target is None:
+    print("Endereço invalido ou nome de host não resolvido")
+    sys.exit(1)
 
-# Definindo o range de postas
-
+scan_type = sys.argv[2].lower()
 start_port = 1
-end_port = 1024
+end_port = 1000
 
-#realiza o scan
-for port in range(start_port,end_port + 1):
-    scan_port(target_ip, port)
+
+if scan_type == "udp":
+        print(f"Iniciando varredura UDP em {target}")
+        for port in range(start_port, end_port + 1):
+            scan_udp(target, port)
+        print("Varredura UDP concluída.")
+elif scan_type == "tcp":
+        print(f"Iniciando varredura TCP em {target}")
+        for port in range(start_port, end_port + 1):
+            scan_tcp(target, port)
+        print("Varredura TCP concluída.")
+else:
+    print("Tipo de varredura inválido. Use 'tcp' ou 'udp'.")
