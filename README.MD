@@ -7,3 +7,5 @@
 ## Opções
   * tcp
   * udp
+
+> Serão feitas atualizações no código para implementar mais tipos de scanning e recursos avançados.
