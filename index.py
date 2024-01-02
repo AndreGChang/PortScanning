@@ -101,7 +101,11 @@ elif scan_type == "sFA":
 elif scan_type == "sA":
     print(f"Iniciando varredura TCP ACK em {target}")
     for port in range(start_port, end_port + 1):
-        scan_ack(target, port)
+        result = scan_ack(target, port)
+        if result == True:
+            print(f"Porta {port} aberta/filtrada")
+        elif result == False:
+            print(f"Porta {port} filtrada")
     print("Varredura TCP ACK concluída.")
 
 elif scan_type == "sTW":

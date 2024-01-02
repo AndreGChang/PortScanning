@@ -88,7 +88,7 @@ def scan_ack(ip, port):
             return True
     elif resp.hasLayer(ICMP):
         if int(resp.getlayer(ICMP).type) == 3 and int(resp.getlayer(ICMP).code) in [1,2,3,9,10,13]:
-            return True
+            return False
         
 def scan_tcp_windown(ip, port):
     src_port = RandShort()
@@ -99,5 +99,8 @@ def scan_tcp_windown(ip, port):
         window_size = resp.getlayer(TCP).window_size
         if window_size > 0:
             return f"Porta {port} aberta"
+        elif resp.haslayer(ICMP):
+            if int(resp.getlayer(ICMP).type) == 3 and int(resp.getlayer(ICMP).code) in [1,2,3,9,10,13]:
+                
         
 
