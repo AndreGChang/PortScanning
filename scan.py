@@ -15,15 +15,11 @@ def scan_syn(ip, port):
     resp = sr1(p, timeout=time_max_await, verbose=0)
 
     if resp is None:
-        return f"Porta: {port} filtrada" # Sem resposta, possivelmente filtrada
+        return False
     elif resp.haslayer(TCP):
         if resp.getlayer(TCP).flags == 0x12:
-            banner = banner_grab(ip, port)
             sr(IP(dst=ip)/TCP(dport=resp.sport, flags='R'), timeout=time_max_await, verbose=0)
-            return f"Porta: {port} Aberta - Serviço: {banner}"
-        elif resp.getlayer(TCP).flags == 0x14:
-            return f"Porta: {port} Fechada"
-    return f"Porta: {port} Estado Desconhecido"
+            return True
 
 def scan_udp(ip,port):
     src_port = RandShort()
@@ -31,22 +27,20 @@ def scan_udp(ip,port):
     resp = sr1(p, timeout=time_max_await, verbose=0)
 
     if resp is None:
-        return f"Porta: {port} UDP - Aberta?filtrada"
+        return True
     else:
         if resp.haslayer(ICMP):
-            return f"Porta: {port} UDP - Fechada"
+            return False
         elif resp.hasLayer(UDP):
-            return f"Porta: {port} UDP - Aberta?filtrada"
-        else:
-            return f"Porta: {port} Desconhecido"
+            return True
 
 def scan_fin(ip,port):
     src_port = RandShort()
-    p = IP(dsp = ip)/TCP(sport=src_port, dport=port, flags = "F")
+    p = IP(dst = ip)/TCP(sport=src_port, dport=port, flags = "F")
     resp = sr1(p, timeout=time_max_await, verbose=0)
 
     if resp is None:
-        return f"Porta {port} esta aberta"
+        return True
 
 def scan_xmas(ip, port):
     src_port = RandShort()
@@ -54,26 +48,56 @@ def scan_xmas(ip, port):
     resp = sr1(p, timeout=time_max_await, verbose=0)
 
     if resp is None:
-        return f"Porta {port} esta aberta ou filtrada"
+        return True
+    elif resp.haslayer(ICMP):
+        if int(resp.getlayer(ICMP).type) == 3 and int(resp.getlayer(ICMP).code) in [1,2,3,9,10,13]:
+            return False
     
 def scan_null(ip, port):
     src_port = RandShort()
     p = IP(dst = ip)/TCP(sport=src_port, dport=port, flags='')
     resp = sr1(p, timeout=time_max_await, verbose=0)
 
-    if resp in None:
-            return f"Porta {port} aberta"
+    if resp is None:
+        return True
+    elif resp.haslayer(ICMP):
+        if int(resp.getlayer(ICMP).type) == 3 and int(resp.getlayer(ICMP).code) in [1,2,3,9,10,13]:
+            return False
     
+def scan_fin_ack(ip, port):
+    src_port = RandShort()
+    p = IP(dst=ip)/TCP(sport = src_port, dport=port, flags="FA")
+    resp = sr1(p, timeout=time_max_await, verbose=0)
+
+    if resp is None:
+        return True
+    elif resp.haslayer(ICMP):
+        icmp_type = resp.getlayer(ICMP).type
+        if icmp_type == 3:
+            return False
+
 def scan_ack(ip, port):
     src_port = RandShort()
-    p = IP(dest = ip)/TCP(sport=src_port, dport=port, flags="A")
+    p = IP(dst = ip)/TCP(sport=src_port, dport=port, flags="A")
     resp = sr1(p, timeout=time_max_await, verbose=0)
 
     if resp in None:
-        return f"A resposta da porta {port} foi filtrada"
+        return False
     elif resp.haslayer(TCP):
        if resp.getlayer(TCP).flags == 0x14:
-            return f"A porta {port} nao esta filtrada"
+            return True
     elif resp.hasLayer(ICMP):
-        if int(resp.getlayer(ICMP).type) == 3 and int(response.getLayer(ICMP).code) in [1,2,3,9,10,13]:
-            return f"A porta {port} esta filtrada"
+        if int(resp.getlayer(ICMP).type) == 3 and int(resp.getlayer(ICMP).code) in [1,2,3,9,10,13]:
+            return True
+        
+def scan_tcp_windown(ip, port):
+    src_port = RandShort()
+    p = IP(dst=ip)/TCP(sport = src_port, dport = port, flags="A")
+    resp = sr1(p, timeout=time_max_await, verbose =0)
+
+    if resp is not None and resp.haslayer(TCP):
+        window_size = resp.getlayer(TCP).window_size
+        if window_size > 0:
+            return f"Porta {port} aberta"
+        
+

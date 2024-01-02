@@ -11,5 +11,5 @@ def banner_grab(ip, port):
         banner = s.recv(1024)
         s.close()
         return banner.decode('utf-8', 'ignore')
-    except: 
-        return 'Falha na obtenção do banner'
+    except Exception as e: 
+        return f'Falha na obtenção do banner: {e}'
