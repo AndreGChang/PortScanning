@@ -44,7 +44,7 @@ if scan_type == "udp":
 elif scan_type == "tcp":
         print(f"Iniciando varredura TCP em {target}")
         for port in range(start_port, end_port + 1):
-            scan_tcp(target, port)
+            scan_syn(target, port)
         print("Varredura TCP concluída.")
 else:
     print("Tipo de varredura inválido. Use 'tcp' ou 'udp'.")
