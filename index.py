@@ -111,7 +111,13 @@ elif scan_type == "sA":
 elif scan_type == "sTW":
     print(f"Iniciando varredura TCP Windown em {target}")
     for port in range(start_port, end_port + 1):
-        scan_tcp_windown(target, port)
+        result = scan_tcp_windown(target, port)
+        if result == True:
+            banner = banner_grab(target, port)
+            print(f"Porta {port} aberta - servico {banner}")
+        else:
+            print(f"Porta {port} filtrada")
+
     print("Varredura TCP Windown concluída.")
 
 else:
