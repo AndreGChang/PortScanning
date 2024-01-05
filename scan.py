@@ -2,7 +2,6 @@ import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.all import *
 from scapy.layers.inet import IP, TCP, UDP, ICMP
-from banner_grabber import banner_grab
 
 time_max_await = 2
 
@@ -71,6 +70,9 @@ def scan_fin_ack(ip, port):
 
     if resp is None:
         return True
+    elif resp.haslayer(TCP):
+        if resp.getlayer(TCP).flags == 0x14:
+            return False
     elif resp.haslayer(ICMP):
         icmp_type = resp.getlayer(ICMP).type
         if icmp_type == 3:

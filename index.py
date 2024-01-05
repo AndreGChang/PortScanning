@@ -1,5 +1,5 @@
 import socket
-import sys
+import argparse
 from scan import *
 from banner_grabber import banner_grab
 
@@ -20,26 +20,24 @@ def get_ip_from_input(input_str):
         except socket.gaierror:
             return None
     
+parser = argparse.ArgumentParser(description="Ferramenta de Varredura de Rede")
+parser.add_argument("target", help="Endereço IP ou hostname do alvo")
+parser.add_argument("scan_type", help="Tipo de Varredura (sT,sU,sF,sX,sN,sFA,sA,sTW)")
+parser.add_argument("-p", "--ports", nargs='+', type=int, help="Lista de portas para varrer", default=range(1, 1026))
 
-if len(sys.argv) != 3:
-    print("Uso: python index.py <alvo> <tipo>")
-    print("Exemplo: python index.py 192.168.1.1 sT")
-    sys.exit(1)
+args = parser.parse_args()
 
-target = get_ip_from_input(sys.argv[1])
-print(target)
+target = get_ip_from_input(args.target)
 if target is None:
     print("Endereço invalido ou nome de host não resolvido")
     sys.exit(1)
 
-scan_type = sys.argv[2]
-start_port = 1
-end_port = 1000
-
+scan_type = args.scan_type
+ports = args.ports
 
 if scan_type == "sU":
     print(f"Iniciando varredura UDP em {target}")
-    for port in range(start_port, end_port + 1):
+    for port in ports:
         result = scan_udp(target, port)
         if result == True:
             banner = banner_grab(target, port)
@@ -48,7 +46,7 @@ if scan_type == "sU":
 
 elif scan_type == "sT":
     print(f"Iniciando varredura TCP em {target}")
-    for port in range(start_port, end_port + 1):
+    for port in ports:
         result = scan_syn(target, port)
         if result == True:
            banner = banner_grab(target, port)
@@ -57,17 +55,16 @@ elif scan_type == "sT":
 
 elif scan_type == "sF":
     print(f"Iniciando varredura TCP FIN em {target}")
-    for port in range(start_port, end_port + 1):
+    for port in ports:
         result = scan_fin(target, port)
         if result == True:
             banner = banner_grab(target, port)
             print(f"Porta {port} aberta - seviço {banner}")
-        
     print("Varredura TCP FIN concluída.")
 
 elif scan_type == "sX":
     print(f"Iniciando varredura TCP XMAS em {target}")
-    for port in range(start_port, end_port + 1):
+    for port in ports:
         result = scan_xmas(target, port)
         if result == True:
             banner = banner_grab(target, port)
@@ -78,7 +75,7 @@ elif scan_type == "sX":
 
 elif scan_type == "sN":
     print(f"Iniciando varredura TCP NULL em {target}")
-    for port in range(start_port, end_port + 1):
+    for port in ports:
         result = scan_null(target, port)
         if result == True:
             banner = banner_grab(target, port)
@@ -89,7 +86,7 @@ elif scan_type == "sN":
 
 elif scan_type == "sFA":
     print(f"Iniciando varredura TCP FIN/ACK em {target}")
-    for port in range(start_port, end_port + 1):
+    for port in ports:
         result = scan_fin_ack(target, port)
         if result == True:
             banner = banner_grab(target, port)
@@ -100,25 +97,13 @@ elif scan_type == "sFA":
 
 elif scan_type == "sA":
     print(f"Iniciando varredura TCP ACK em {target}")
-    for port in range(start_port, end_port + 1):
-        result = scan_ack(target, port)
-        if result == True:
-            print(f"Porta {port} aberta/filtrada")
-        elif result == False:
-            print(f"Porta {port} filtrada")
+    for port in ports:
+        scan_ack(target, port)
     print("Varredura TCP ACK concluída.")
 
 elif scan_type == "sTW":
     print(f"Iniciando varredura TCP Windown em {target}")
-    for port in range(start_port, end_port + 1):
-        result = scan_tcp_windown(target, port)
-        if result == True:
-            banner = banner_grab(target, port)
-            print(f"Porta {port} aberta - servico {banner}")
-        else:
-            print(f"Porta {port} filtrada")
-
+    for port in ports:
+        scan_tcp_windown(target, port)
     print("Varredura TCP Windown concluída.")
 
-else:
-    print("Tipo de varredura inválido. Use 'sT' scan TCP, 'sU' scan UDP, 'sF' scan FIN, 'sX' scan XMAS, 'sN' scan NULL, 'sFA' scan FIN/ACK, 'sA' scan ACK, 'sTW' scan TCP Window.")
