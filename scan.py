@@ -3,7 +3,7 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.all import *
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 
-time_max_await = 2
+time_max_await = 0.5
 verb_type = 0
 
 def scan_tcp_connect(ip, port):
@@ -13,7 +13,7 @@ def scan_tcp_connect(ip, port):
     if resp is None:
         return False
     elif resp.haslayer(TCP) and resp.getlayer(TCP).flags == 0x12:
-        sr(IP(dst=ip)/TCP(dport=port, flags="A"), timeout=0.5, verbose=verb_type)
+        sr1(IP(dst=ip)/TCP(dport=port, flags="A"), timeout=0.5, verbose=verb_type)
         return True
     elif resp.haslayer(TCP) and resp.geylayer(TCP).flags == 0x14:
         return False
