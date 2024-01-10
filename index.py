@@ -3,13 +3,15 @@ import argparse
 from scan import *
 from banner_grabber import banner_grab
 
+
 def is_valid_ip(target_ip):
     try:
         socket.inet_aton(target_ip)
         return True
     except socket.error:
         return False
-    
+
+
 def get_ip_from_input(input_str):
     if is_valid_ip(input_str):
         return input_str
@@ -19,11 +21,14 @@ def get_ip_from_input(input_str):
             return ip
         except socket.gaierror:
             return None
-    
+
+
 parser = argparse.ArgumentParser(description="Ferramenta de Varredura de Rede")
 parser.add_argument("target", help="Endereço IP ou hostname do alvo")
-parser.add_argument("scan_type", help="Tipo de Varredura (sT,sU,sF,sX,sN,sFA,sA,sTW)")
-parser.add_argument("-p", "--ports", nargs='+', type=int, help="Lista de portas para varrer", default=range(1, 1026))
+parser.add_argument(
+    "scan_type", help="Tipo de Varredura (sT,sU,sF,sX,sN,sFA,sA,sTW)", default="sT")
+parser.add_argument("-p", "--ports", nargs='+', type=int,
+                    help="Lista de portas para varrer", default=range(1, 1026))
 
 args = parser.parse_args()
 
@@ -44,13 +49,13 @@ if scan_type == "sU":
             print(f"Porta {port} aberta/filtrada - serviço {banner}")
     print("Varredura UDP concluída.")
 
-elif scan_type == "sT":
+elif scan_type == "sS":
     print(f"Iniciando varredura TCP em {target}")
     for port in ports:
         result = scan_syn(target, port)
         if result == True:
-           banner = banner_grab(target, port)
-           print(f"Porta {port} aberta - serviço {banner}")
+            banner = banner_grab(target, port)
+            print(f"Porta {port} aberta - serviço {banner}")
     print("Varredura TCP concluída.")
 
 elif scan_type == "sF":
@@ -106,4 +111,3 @@ elif scan_type == "sTW":
     for port in ports:
         scan_tcp_windown(target, port)
     print("Varredura TCP Windown concluída.")
-

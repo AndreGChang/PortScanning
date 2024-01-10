@@ -4,30 +4,41 @@ from scapy.all import *
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 
 time_max_await = 2
+verb_type = 0
+
+def scan_tcp_connect(ip, port):
+    p = IP(dsp=ip)/TCP(sport=RandShort(), dport=port, flags='S')
+    resp = sr1(p, timeout=0.5, verbose = verb_type)
+
+    if resp is None:
+        return False
+    elif resp.haslayer(TCP) and resp.getlayer(TCP).flags == 0x12:
+        sr(IP(dst=ip)/TCP(dport=port, flags="A"), timeout=0.5, verbose=verb_type)
+        return True
+    elif resp.haslayer(TCP) and resp.geylayer(TCP).flags == 0x14:
+        return False
+
 
 def scan_syn(ip, port):
-    # Gera um numero aleatorio para a porta de origem
     src_port = RandShort()
-    #Criamos o pacote IP e TCP com o IP de destinho.
     p = IP(dst=ip)/TCP(sport=src_port, dport=port, flags="S")
-    # Esperamos a resposta do pacote enviado
-    resp = sr1(p, timeout=time_max_await, verbose=0)
+    resp = sr1(p, timeout=time_max_await, verbose= verb_type)
 
     if resp is None:
         return False
     elif resp.haslayer(TCP):
         if resp.getlayer(TCP).flags == 0x12:
-            sr(IP(dst=ip)/TCP(dport=resp.sport, flags='R'), timeout=time_max_await, verbose=0)
+            sr(IP(dst=ip)/TCP(dport=resp.sport, flags='R'), timeout=time_max_await, verbose= verb_type)
             return True
 
 def scan_udp(ip,port):
     src_port = RandShort()
     p = IP(dst=ip)/UDP(sport=src_port, dport=port)
-    resp = sr1(p, timeout=time_max_await, verbose=0)
+    resp = sr1(p, timeout=time_max_await, verbose= verb_type)
 
     if resp is None:
         return True
-    else:
+    else: 
         if resp.haslayer(ICMP):
             return False
         elif resp.hasLayer(UDP):
@@ -36,7 +47,7 @@ def scan_udp(ip,port):
 def scan_fin(ip,port):
     src_port = RandShort()
     p = IP(dst = ip)/TCP(sport=src_port, dport=port, flags = "F")
-    resp = sr1(p, timeout=time_max_await, verbose=0)
+    resp = sr1(p, timeout=time_max_await, verbose = verb_type)
 
     if resp is None:
         return True
@@ -44,7 +55,7 @@ def scan_fin(ip,port):
 def scan_xmas(ip, port):
     src_port = RandShort()
     p = IP(dst = ip)/TCP(sport=src_port, dport=port, flags="FPU")
-    resp = sr1(p, timeout=time_max_await, verbose=0)
+    resp = sr1(p, timeout=time_max_await, verbose= verb_type)
 
     if resp is None:
         return True
@@ -55,7 +66,7 @@ def scan_xmas(ip, port):
 def scan_null(ip, port):
     src_port = RandShort()
     p = IP(dst = ip)/TCP(sport=src_port, dport=port, flags='')
-    resp = sr1(p, timeout=time_max_await, verbose=0)
+    resp = sr1(p, timeout=time_max_await, verbose= verb_type)
 
     if resp is None:
         return True
@@ -66,7 +77,7 @@ def scan_null(ip, port):
 def scan_fin_ack(ip, port):
     src_port = RandShort()
     p = IP(dst=ip)/TCP(sport = src_port, dport=port, flags="FA")
-    resp = sr1(p, timeout=time_max_await, verbose=0)
+    resp = sr1(p, timeout=time_max_await, verbose=verb_type)
 
     if resp is None:
         return True
@@ -81,7 +92,7 @@ def scan_fin_ack(ip, port):
 def scan_ack(ip, port):
     src_port = RandShort()
     p = IP(dst = ip)/TCP(sport=src_port, dport=port, flags="A")
-    resp = sr1(p, timeout=time_max_await, verbose=0)
+    resp = sr1(p, timeout=time_max_await, verbose=verb_type)
 
     if resp in None:
         return False
@@ -95,7 +106,7 @@ def scan_ack(ip, port):
 def scan_tcp_windown(ip, port):
     src_port = RandShort()
     p = IP(dst=ip)/TCP(sport = src_port, dport = port, flags="A")
-    resp = sr1(p, timeout=time_max_await, verbose =0)
+    resp = sr1(p, timeout=time_max_await, verbose =verb_type)
 
     if resp is not None and resp.haslayer(TCP):
         window_size = resp.getlayer(TCP).window_size
