@@ -3,51 +3,51 @@ import argparse
 from scan import *
 from banner_grabber import banner_grab
 
+class ScanManager:
+    def __init__(self):
+        # self.colocar classe de scan
+        self.parse_args()
+        
+    def parse_args(self):
+        parser = argparse.ArgumentParser(description="Ferramenta de Varredura de Rede")
+        parser.add_argument("target", help="Endereço IP ou hostname do alvo")
+        parser.add_argument("scan_type", help="Tipo de Varredura (sT,sU,sF,sX,sN,sFA,sA,sTW)", default="sT")
+        parser.add_argument("-p", "--ports", nargs='+', type=int, help="Lista de portas para varrer", default=range(1, 1026))
+        self.args = parser.parse_args()
 
-def is_valid_ip(target_ip):
-    try:
-        socket.inet_aton(target_ip)
-        return True
-    except socket.error:
-        return False
-
-
-def get_ip_from_input(input_str):
-    if is_valid_ip(input_str):
-        return input_str
-    else:
+    
+    def is_valid_ip(self, target_ip):
         try:
-            ip = socket.gethostbyname(input_str)
-            return ip
-        except socket.gaierror:
-            return None
+            socket.inet_aton(target_ip)
+            return True
+        except socket.error:
+            return False
 
 
-parser = argparse.ArgumentParser(description="Ferramenta de Varredura de Rede")
-parser.add_argument("target", help="Endereço IP ou hostname do alvo")
-parser.add_argument(
-    "scan_type", help="Tipo de Varredura (sT,sU,sF,sX,sN,sFA,sA,sTW)", default="sT")
-parser.add_argument("-p", "--ports", nargs='+', type=int,
-                    help="Lista de portas para varrer", default=range(1, 1026))
+    def get_ip_from_input(self, input_str):
+        if self.is_valid_ip(input_str):
+            return input_str
+        else:
+            try:
+                ip = socket.gethostbyname(input_str)
+                return ip
+            except socket.gaierror:
+                return None
+            
+    def run_scan(self):
+        target_ip = self.get_ip_from_input(self.args.target)
+        if target_ip is None:
+            print("Endereço invalido ou nome de host não resolvido")
+            sys.exit(1)
 
-args = parser.parse_args()
-
-target = get_ip_from_input(args.target)
-if target is None:
-    print("Endereço invalido ou nome de host não resolvido")
-    sys.exit(1)
-
-scan_type = args.scan_type
-ports = args.ports
-
-if scan_type == "sU":
-    print(f"Iniciando varredura UDP em {target}")
-    for port in ports:
-        result = scan_udp(target, port)
-        if result == True:
-            banner = banner_grab(target, port)
-            print(f"Porta {port} aberta/filtrada - serviço {banner}")
-    print("Varredura UDP concluída.")
+    if args.scan_type == "sU":
+        print(f"Iniciando varredura UDP em {target}")
+        for port in ports:
+            result = scan_udp(target, port)
+            if result == True:
+                banner = banner_grab(target, port)
+                print(f"Porta {port} aberta/filtrada - serviço {banner}")
+        print("Varredura UDP concluída.")
 
 elif scan_type == "sS":
     print(f"Iniciando varredura TCP em {target}")
