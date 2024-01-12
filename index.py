@@ -49,6 +49,15 @@ if scan_type == "sU":
             print(f"Porta {port} aberta/filtrada - serviço {banner}")
     print("Varredura UDP concluída.")
 
+elif scan_type == "sT":
+    print(f"Iniciando varredura TCP em {target}")
+    for port in ports:
+        result = scan_tcp_connect(target, port)
+        if result == True:
+            banner = banner_grab(target, port)
+            print(f"Porta {port} aberta - serviço {banner}")
+    print("Varredura TCP concluída.")
+    
 elif scan_type == "sS":
     print(f"Iniciando varredura TCP em {target}")
     for port in ports:
